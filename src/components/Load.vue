@@ -25,21 +25,36 @@
     <!-- continuous mode selection -->
     <div v-if="load.type == 'continuous'">
         <label for="load" class="form-label">Load consumption (continuous)</label>
-        <input type="number" class="form-control" id="load" v-model.lazy="load.consumptionContinuous" @change="$emit('updateCalc', $event, load)">
+        <div class="input-group mb-3">
+            <input type="number" class="form-control" id="load" v-model.lazy="load.consumptionContinuous" @change="$emit('updateCalc', $event, load)">
+          <span class="input-group-text" id="basic-addon2">mA</span>
+        </div>
     </div>
     <div v-else>
         <form class="row g-3">
             <div class="col-md-6">
                 <label for="activeConsumption" class="form-label">Active consumption</label>
-                <input type="number" class="form-control" id="activeConsumption" v-model.lazy="load.activeConsumption">
+                <div class="input-group mb-3">
+                    <input type="number" class="form-control" id="activeConsumption" v-model.lazy="load.activeConsumption">
+                    <span class="input-group-text" id="basic-addon2">mA</span>
+                </div>
                 <label for="activeInterval" class="form-label">Active interval</label @change="$emit('updateCalc', $event, load)">
-                <input type="number" class="form-control" id="activeInterval" v-model.lazy="load.activeInterval" @change="$emit('updateCalc', $event, load)">
+                <div class="input-group mb-3">
+                    <input type="number" class="form-control" id="activeInterval" v-model.lazy="load.activeInterval" @change="$emit('updateCalc', $event, load)">
+                    <span class="input-group-text" id="basic-addon2">s</span>
+                </div>
             </div>
             <div class="col-md-6">
                 <label for="sleepConsumption" class="form-label">Sleep consumption</label>
-                <input type="number" class="form-control" id="sleepConsumption" v-model.lazy="load.sleepConsumption" @change="$emit('updateCalc', $event, load)">
+                <div class="input-group mb-3">
+                    <input type="number" class="form-control" id="sleepConsumption" v-model.lazy="load.sleepConsumption" @change="$emit('updateCalc', $event, load)">
+                    <span class="input-group-text" id="basic-addon2">mA</span>
+                </div>
                 <label for="sleepInterval" class="form-label">Sleep interval</label>
-                <input type="number" class="form-control" id="sleepInterval" v-model.lazy="load.sleepInterval" @change="$emit('updateCalc', $event, load)">
+                <div class="input-group mb-3">
+                    <input type="number" class="form-control" id="sleepInterval" v-model.lazy="load.sleepInterval" @change="$emit('updateCalc', $event, load)">
+                    <span class="input-group-text" id="basic-addon2">s</span>
+                </div>
             </div>
         </form>
     </div>

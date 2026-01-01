@@ -128,17 +128,25 @@ updateCalc()
     <button class="nav-link" id="load-tab" data-bs-toggle="tab" data-bs-target="#load-tab-pane" type="button" role="tab" aria-controls="load-tab-pane" aria-selected="false">Instrument load</button>
   </li>
 </ul>
-<div class="tab-content" id="myTabContent">
+<div class="tab-content" id="">
   <!-- Deployment parameters tab -->
   <div class="tab-pane fade show active p-3" id="deployment-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
     <form class="row g-3">
       <div class="col-md-6">
       <label for="latitude" class="form-label">Latitude</label>
-      <input min="-90" max="90" type="number" class="form-control" id="latitude" v-model.lazy="location.latitude" @change="updateCalc">
+      <!-- -->
+      <div class="input-group mb-3">
+        <input min="-90" max="90" type="number" class="form-control" id="latitude" v-model.lazy="location.latitude" @change="updateCalc">
+        <span class="input-group-text" id="basic-addon2">&deg;N</span>
+      </div>
+      
       </div>
       <div class="col-md-6">
         <label for="longitude" class="form-label">Longitude</label>
-        <input min="-180" max="180" type="number" class="form-control" id="longitude" v-model.lazy="location.longitude" @change="calculate">
+        <div class="input-group mb-3">
+          <input min="-180" max="180" type="number" class="form-control" id="longitude" v-model.lazy="location.longitude" @change="calculate">
+          <span class="input-group-text" id="basic-addon2">&deg;W</span>
+        </div>
       </div>
       <div class="col-md-6">
         <label for="deploymentStart" class="form-label">Deployment start</label>
@@ -157,19 +165,31 @@ updateCalc()
     <form class="row g-3">
       <div class="col-md-3">
         <label for="voltage" class="form-label">Nominal voltage</label>
-        <input min="0" type="number" class="form-control" id="voltage" v-model.lazy="battery.voltage">
+        <div class="input-group mb-3">
+          <input min="0" type="number" class="form-control" id="voltage" v-model.lazy="battery.voltage">
+          <span class="input-group-text" id="basic-addon2">V</span>
+        </div>
       </div>
       <div class="col-md-3">
         <label for="capacity" class="form-label">Current capacity</label>
-        <input min="0" type="number" class="form-control" id="capacity" v-model.lazy="battery.capacity">
+        <div class="input-group mb-3">
+          <input min="0" type="number" class="form-control" id="capacity" v-model.lazy="battery.capacity">
+          <span class="input-group-text" id="basic-addon2">Ah</span>
+        </div>
       </div>
       <div class="col-md-3">
         <label for="battDerating" class="form-label">Temperature derating</label>
-        <input min="0" max="100" type="number" class="form-control" id="battDerating" v-model.lazy="battery.derating">
+        <div class="input-group mb-3">
+          <input min="0" max="100" type="number" class="form-control" id="battDerating" v-model.lazy="battery.derating">
+          <span class="input-group-text" id="basic-addon2">%</span>
+        </div>
       </div>
       <div class="col-md-3">
         <label for="chargeEfficiency" class="form-label">Charge efficiency</label>
-        <input min="0" max="100" type="number" class="form-control" id="chargeEfficiency" v-model.lazy="battery.efficiency">
+        <div class="input-group mb-3">
+          <input min="0" max="100" type="number" class="form-control" id="chargeEfficiency" v-model.lazy="battery.efficiency">
+          <span class="input-group-text" id="basic-addon2">%</span>
+        </div>
       </div>
     </form>
     <p class="mt-3">
@@ -186,11 +206,17 @@ updateCalc()
     <form class="row g-3">      
       <div class="col-md-3">
         <label for="panelPower" class="form-label">Power</label>
-        <input type="number" class="form-control" id="panelPower" v-model.lazy="panel.power">
+        <div class="input-group mb-3">
+          <input type="number" class="form-control" id="panelPower" v-model.lazy="panel.power">
+          <span class="input-group-text" id="basic-addon2">W</span>
+        </div>
       </div>
       <div class="col-md-3">
         <label for="panelDerating" class="form-label">Panel derating</label>
-        <input type="number" class="form-control" id="panelDerating" v-model.lazy="panel.derating">
+        <div class="input-group mb-3">
+          <input type="number" class="form-control" id="panelDerating" v-model.lazy="panel.derating">
+          <span class="input-group-text" id="basic-addon2">%</span>
+        </div>
       </div><div class="col-md-6"></div>
     </form>
     <p class="mt-3">
@@ -201,11 +227,17 @@ updateCalc()
     <form class="row g-3">
       <div class="col-md-3">
         <label for="selfConsDay" class="form-label">Self-consumption (day)</label>
-        <input type="number" class="form-control" id="selfConsDay" v-model.lazy="regulator.consumptionDay">
+        <div class="input-group mb-3">
+          <input type="number" class="form-control" id="selfConsDay" v-model.lazy="regulator.consumptionDay">
+          <span class="input-group-text" id="basic-addon2">mA</span>
+        </div>
       </div>
       <div class="col-md-3">
         <label for="selfConsNight" class="form-label">Self-consumption (night)</label>
-        <input type="number" class="form-control" id="selfConsNight" v-model.lazy="regulator.consumptionNight">
+        <div class="input-group mb-3">
+          <input type="number" class="form-control" id="selfConsNight" v-model.lazy="regulator.consumptionNight">
+          <span class="input-group-text" id="basic-addon2">mA</span>
+        </div>
       </div><div class="col-md-6"></div>
     </form>
   </div>
