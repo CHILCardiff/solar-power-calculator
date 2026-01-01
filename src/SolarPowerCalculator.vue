@@ -1,7 +1,8 @@
 <script setup>
 // Run locally with npm run dev
 import { computed, onMounted, ref } from 'vue'
-import { dateToSolarParemeters } from './calculator.js'
+import { calculateBatteryCharging, dateToSolarParemeters } from './calculator.js'
+import Load from './components/Load.vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import LineChart from './components/LineChart.vue';
@@ -19,8 +20,38 @@ const location = ref({
     longitude : -50.0
 })
 
+const panel = ref({
+    power : 20.0,
+    derating : 10
+})
+
+const regulator = ref({
+  consumptionDay : 10,
+  consumptionNight : 15
+})
+
+const load = ref({
+  calcParameter : 'load',
+  type : "continuous",
+  consumptionContinuous : 5.0,
+  activeConsumption     : 5.0,
+  sleepConsumption      : 0.1,
+  activeInterval        : 10, // seconds
+  sleepInterval         : 590 // seconds
+})
+
+const battery = ref({
+  voltage : 12.0,
+  capacity : 26.0,
+  derating : 50,
+  efficiency : 85,
+  initialCapacity : 50
+})
+
 const dates = ref([])
 const sunlightData = ref([])
+
+const minDischarge = ref(100)
 
 function calculate() {
 
@@ -33,7 +64,7 @@ function calculate() {
     var day = 0;
     
     while (cdate <= endDate.value) {
-        temp_dates.push(day++);
+        temp_dates.push(cdate.toLocaleDateString());
         temp_sunlight.push(dateToSolarParemeters(
             cdate, 
             location.value.latitude, 
@@ -43,50 +74,160 @@ function calculate() {
         cdate.setDate(cdate.getDate() + 1)
     }
 
-    dates.value = temp_dates
-    sunlightData.value = temp_sunlight
+    var capacities = calculateBatteryCharging(
+      temp_sunlight, battery, panel, regulator, load
+    )
 
-    console.log("Rendering")
-    console.log(temp_sunlight.length)
+    dates.value = temp_dates
+    sunlightData.value = capacities
 
 }
 
-calculate()
+function updateCalc(event, data) {
+  
+  if (data == undefined) {
+    // skip
+  } 
+  else if (data.calcParameter == "load") {
+    console.log("updating load")
+    load.value = data;
+  }
+
+  calculate()
+
+  minDischarge.value = Math.min(...sunlightData.value)
+
+}
+
+updateCalc()
 
 </script>
 
 <template>
 
 <div class="m-3">
-<h1>CHIL - Solar power calculator</h1>
-<form class="row g-3">
-  <div class="col-md-6">
-    <label for="latitude" class="form-label">Latitude</label>
-    <input type="number" class="form-control" id="latitude" v-model="location.latitude" @change="calculate">
+<h1>Solar power calculator</h1>
+<p>
+  This tool is designed to help plan power system requirements for deployments of solar-powered instrumentation and is based on the spreadsheet tool described in <a href="https://gi.copernicus.org/articles/14/503/2025/">this paper</a>.
+</p>
+<!-- Tab navigation bar -->
+<ul class="nav nav-tabs" id="parameterTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="deployment-tab" data-bs-toggle="tab" data-bs-target="#deployment-tab-pane" type="button" role="tab" aria-controls="deployment-tab-pane" aria-selected="true">Deployment</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="battery-tab" data-bs-toggle="tab" data-bs-target="#battery-tab-pane" type="button" role="tab" aria-controls="battery-tab-pane" aria-selected="false">Battery</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="solar-tab" data-bs-toggle="tab" data-bs-target="#solar-tab-pane" type="button" role="tab" aria-controls="solar-tab-pane" aria-selected="false">Solar panel</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="regulator-tab" data-bs-toggle="tab" data-bs-target="#regulator-tab-pane" type="button" role="tab" aria-controls="regulator-tab-pane" aria-selected="false">Solar regulator</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="load-tab" data-bs-toggle="tab" data-bs-target="#load-tab-pane" type="button" role="tab" aria-controls="load-tab-pane" aria-selected="false">Instrument load</button>
+  </li>
+</ul>
+<div class="tab-content" id="myTabContent">
+  <!-- Deployment parameters tab -->
+  <div class="tab-pane fade show active p-3" id="deployment-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+    <form class="row g-3">
+      <div class="col-md-6">
+      <label for="latitude" class="form-label">Latitude</label>
+      <input min="-90" max="90" type="number" class="form-control" id="latitude" v-model.lazy="location.latitude" @change="updateCalc">
+      </div>
+      <div class="col-md-6">
+        <label for="longitude" class="form-label">Longitude</label>
+        <input min="-180" max="180" type="number" class="form-control" id="longitude" v-model.lazy="location.longitude" @change="calculate">
+      </div>
+      <div class="col-md-6">
+        <label for="deploymentStart" class="form-label">Deployment start</label>
+        <VueDatePicker :formats="{ input: 'dd/MM/yyyy' }" :time-config="{ enableTimePicker: false, startTime: { hours: 12, minutes: 0 } }" :max-date="endDate" v-model.lazy="startDate" @update:model-value="updateCalc"></VueDatePicker>
+      </div>
+      <div class="col-md-6">
+        <label for="deploymentend" class="form-label">Deployment end</label>
+        <VueDatePicker :formats="{ input: 'dd/MM/yyyy' }" :time-config="{ enableTimePicker: false, startTime: { hours: 12, minutes: 0 } }" :min-date="startDate" v-model.lazy="endDate" @update:model-value="updateCalc"></VueDatePicker>
+      </div>
+    </form>
+    <p class="mt-3">
+      The location of the deployment affects the solar powered delivered from the panel to the battery due to changing elevation of the sun above the horizon. In polar regions, this can result in periods where no charging takes place.
+    </p>
   </div>
-  <div class="col-md-6">
-    <label for="longitude" class="form-label">Longitude</label>
-    <input type="number" class="form-control" id="longitude" v-model="location.longitude" @change="calculate">
+  <div class="tab-pane fade p-3" id="battery-tab-pane" role="tabpanel" aria-labelledby="battery-tab" tabindex="0">
+    <form class="row g-3">
+      <div class="col-md-3">
+        <label for="voltage" class="form-label">Nominal voltage</label>
+        <input min="0" type="number" class="form-control" id="voltage" v-model.lazy="battery.voltage">
+      </div>
+      <div class="col-md-3">
+        <label for="capacity" class="form-label">Current capacity</label>
+        <input min="0" type="number" class="form-control" id="capacity" v-model.lazy="battery.capacity">
+      </div>
+      <div class="col-md-3">
+        <label for="battDerating" class="form-label">Temperature derating</label>
+        <input min="0" max="100" type="number" class="form-control" id="battDerating" v-model.lazy="battery.derating">
+      </div>
+      <div class="col-md-3">
+        <label for="chargeEfficiency" class="form-label">Charge efficiency</label>
+        <input min="0" max="100" type="number" class="form-control" id="chargeEfficiency" v-model.lazy="battery.efficiency">
+      </div>
+    </form>
+    <p class="mt-3">
+      The depth of discharge depends on the battery's power capacity, determined by its nominal voltage (V) and current capacity (Ah).
+    </p>
+    <p>
+      In low temperatures, the total available capacity of a battery is reduced. This effect is modelled with the "temperature derating" field below, which dictates the fraction of the nominal capacity which is available.
+    </p>
+    <p>
+      Energy is lost during the charging of a lead-acid battery through heat and gassing, which reduces the amount of energy from the solar panel stored in the battery during charging. This is modelled with the "charge efficiency" parameter.
+    </p>
   </div>
-  <div class="col-12">
-    <label for="deploymentStart" class="form-label">Deployment start</label>
-    <VueDatePicker :formats="{ input: 'dd/MM/yyyy' }" :time-config="{ enableTimePicker: false, startTime: { hours: 12, minutes: 0 } }" :max-date="endDate" v-model="startDate" @update:model-value="calculate"></VueDatePicker>
+  <div class="tab-pane fade p-3" id="solar-tab-pane" role="tabpanel" aria-labelledby="solar-tab" tabindex="0">
+    <form class="row g-3">      
+      <div class="col-md-3">
+        <label for="panelPower" class="form-label">Power</label>
+        <input type="number" class="form-control" id="panelPower" v-model.lazy="panel.power">
+      </div>
+      <div class="col-md-3">
+        <label for="panelDerating" class="form-label">Panel derating</label>
+        <input type="number" class="form-control" id="panelDerating" v-model.lazy="panel.derating">
+      </div><div class="col-md-6"></div>
+    </form>
+    <p class="mt-3">
+      The power delivered from a solar panel depends on its surface area. Solar panels are typically sold with a rated maximum power (specified here) but are unlikely to deliver this power unless in direct sunlight. The panel derating factor models the impact of suboptimal weather conditions by delivering only a specified fraction of the rated power. Anecdotally, we have found 10% to be a reasonable value for this for a range of expected weather conditions.
+    </p>
   </div>
-  <div class="col-12">
-    <label for="deploymentend" class="form-label">Deployment end</label>
-    <VueDatePicker :formats="{ input: 'dd/MM/yyyy' }" :time-config="{ enableTimePicker: false, startTime: { hours: 12, minutes: 0 } }" :min-date="startDate" v-model="endDate" @update:model-value="calculate"></VueDatePicker>
+  <div class="tab-pane fade p-3" id="regulator-tab-pane" role="tabpanel" aria-labelledby="regulator-tab" tabindex="0">
+    <form class="row g-3">
+      <div class="col-md-3">
+        <label for="selfConsDay" class="form-label">Self-consumption (day)</label>
+        <input type="number" class="form-control" id="selfConsDay" v-model.lazy="regulator.consumptionDay">
+      </div>
+      <div class="col-md-3">
+        <label for="selfConsNight" class="form-label">Self-consumption (night)</label>
+        <input type="number" class="form-control" id="selfConsNight" v-model.lazy="regulator.consumptionNight">
+      </div><div class="col-md-6"></div>
+    </form>
   </div>
+  <div class="tab-pane fade p-3" id="load-tab-pane" role="tabpanel" aria-labelledby="load-tab" tabindex="0">
+      <Load @update-calc="updateCalc"/>
+  </div>
+</div>
 
-  <div class="col-3">
-    <button type="button" class="btn btn-primary" @click="calculate">Calculate</button>
-  </div>
-  
-</form>
-<!-- <span class="my-3">{{  solarParams.sunlightDuration }} mins</span> -->
+<button type="button" class="btn btn-primary" @click="updateCalc">Calculate</button>
+
+<div v-if="minDischarge < 40" class="mt-3 alert alert-danger" role="alert">
+  The depth of discharge is below 40% - this risks limiting the longevity of the lead acid battery! 
 </div>
 
 <div>
   <LineChart :data="sunlightData" :labels="dates" />
 </div>
 
+<h3>Cryospheric and Hydrological Instrumentation Laboratory</h3>
+<p>
+  The original spreadsheet tool was developed by Mike Prior-Jones and Jonathan Hawkins from the CHIL research group in Cardiff University. It is based on the NOAA Global Monitoring Laboratory and equations from <em>Astronomical Algorithms</em>, by Jean Meeus. The sunrise/sunset times are accurate to within 10 minutes across all latitudes, and within a minute for latitudes between &plusmn;72&deg;.
+</p>
+
+</div>
 </template>

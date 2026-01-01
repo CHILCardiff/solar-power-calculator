@@ -17,7 +17,7 @@ export default {
         return {
           labels: this.labels,
           datasets: [{
-            label: 'Sunlight hours',
+            label: 'Depth of discharge',
             data: this.data,
             fill: false,
             borderColor: 'rgb(75, 192, 192)',
@@ -25,7 +25,7 @@ export default {
           }]
       }
       },
-      chartOptions() { return {} /* mutable chart options */ }
+      chartOptions() { return { responsive : true, scales : { y : { min : 0, max : 100} } } /* mutable chart options */ }
   },
   props : {
     labels : {

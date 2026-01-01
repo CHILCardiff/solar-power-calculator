@@ -302,3 +302,64 @@ export function dateToSolarParemeters(date, latitude, longitude, timezone) {
 //     }
 
 // }
+
+export function calculateBatteryCharging(
+    sunlightHours, battery, panel, regulator, load
+) {
+
+    var batteryCapacities = []
+    var batteryCapacity = (battery.value.initialCapacity / 100) * battery.value.capacity *  battery.value.voltage
+    const maxCapacity = battery.value.capacity * battery.value.voltage
+
+    var loadTimeRemaining = 0; // start with number of seconds in a day
+
+    sunlightHours.forEach(function (val) {
+
+        // New day, add to loadTime 
+        loadTimeRemaining += 24 * 60 * 60;
+
+        // Get day and night fractions
+        var dayFraction     = val / 1440
+        var nightFraction   = (1440 - val) / 1440
+
+        // Energy consumed (regulator)
+        var dayEnergyRegulator = dayFraction * 24 * (regulator.value.consumptionDay / 1000) * battery.value.voltage
+        var nightEnergyRegulator = nightFraction * 24 * (regulator.value.consumptionNight / 1000) * battery.value.voltage
+
+        // Energy consumed (load)
+        var energyLoad;
+        if (load.value.type == 'continuous') {
+            // Simple calculation for continuous current draw
+            energyLoad = 24 * battery.value.voltage * load.value.consumptionContinuous / 1000
+            console.log("continuous")
+        } else {
+            // Calculate total interval from start to end of sleep
+            var totalInterval = load.value.activeInterval + load.value.sleepInterval
+            // Calculate bursts per day
+            var bursts = Math.floor(loadTimeRemaining / totalInterval)
+            // Calculate leftover time
+            loadTimeRemaining = loadTimeRemaining - bursts * totalInterval
+            // Calculate energy used
+
+            console.log("Bursts: "+ bursts)
+
+            energyLoad = bursts * load.value.activeInterval / (24 * 60) * battery.value.voltage * load.value.activeConsumption / 1000 + (24 * 60 * 60 - bursts * load.value.activeInterval) / (24 * 60) * battery.value.voltage * load.value.sleepConsumption / 1000
+        }
+
+        console.log(energyLoad)
+
+        // Energy gained (solar)
+        var energySolar = 24 * dayFraction * panel.value.power * (panel.value.derating / 100) * (battery.value.efficiency / 100)
+
+        var newCapacity = Math.min(Math.max(0, batteryCapacity - energyLoad - dayEnergyRegulator - nightEnergyRegulator + energySolar), battery.value.capacity * battery.value.voltage)
+
+        batteryCapacities.push(newCapacity / maxCapacity * 100)
+
+        batteryCapacity = newCapacity
+
+
+    })
+
+    return batteryCapacities
+
+}
