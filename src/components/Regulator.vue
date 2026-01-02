@@ -81,14 +81,14 @@
         <div class="col-md-3">
             <label for="selfConsDay" class="form-label">Self-consumption (day)</label>
             <div class="input-group mb-3">
-            <input type="number" class="form-control" id="selfConsDay" v-model.lazy="regulator.consumptionDay">
+            <input type="number" class="form-control" id="selfConsDay" v-model.lazy="regulator.consumptionDay" :disabled="regulator.model != 'custom'">
             <span class="input-group-text" id="basic-addon2">mA</span>
             </div>
         </div>
         <div class="col-md-3">
             <label for="selfConsNight" class="form-label">Self-consumption (night)</label>
             <div class="input-group mb-3">
-            <input type="number" class="form-control" id="selfConsNight" v-model.lazy="regulator.consumptionNight">
+            <input type="number" class="form-control" id="selfConsNight" v-model.lazy="regulator.consumptionNight" :disabled="regulator.model != 'custom'">
             <span class="input-group-text" id="basic-addon2">mA</span>
             </div>
         </div><div class="col-md-6"></div>
