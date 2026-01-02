@@ -25,7 +25,19 @@ export default {
           }]
       }
       },
-      chartOptions() { return { responsive : true, scales : { y : { min : 0, max : 100} } } /* mutable chart options */ }
+      chartOptions() { return { 
+        responsive : true, 
+        maintainAspectRatio: false,
+        scales : { 
+          y : { 
+            title : {
+              display : true,
+              text : "Depth of discharge (%)"
+            },
+            min : 0, 
+            max : 100} 
+        } 
+      }}
   },
   props : {
     labels : {

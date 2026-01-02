@@ -3,7 +3,7 @@
     import { ref } from 'vue'
 
     const load = ref({
-        calcParameter : 'load',
+        calcParameter : "load",
         type : "continuous",
         consumptionContinuous : 5.0,
         activeConsumption     : 5.0,

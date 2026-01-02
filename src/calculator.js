@@ -331,7 +331,6 @@ export function calculateBatteryCharging(
         if (load.value.type == 'continuous') {
             // Simple calculation for continuous current draw
             energyLoad = 24 * battery.value.voltage * load.value.consumptionContinuous / 1000
-            console.log("continuous")
         } else {
             // Calculate total interval from start to end of sleep
             var totalInterval = load.value.activeInterval + load.value.sleepInterval
@@ -341,12 +340,8 @@ export function calculateBatteryCharging(
             loadTimeRemaining = loadTimeRemaining - bursts * totalInterval
             // Calculate energy used
 
-            console.log("Bursts: "+ bursts)
-
             energyLoad = bursts * load.value.activeInterval / (24 * 60) * battery.value.voltage * load.value.activeConsumption / 1000 + (24 * 60 * 60 - bursts * load.value.activeInterval) / (24 * 60) * battery.value.voltage * load.value.sleepConsumption / 1000
         }
-
-        console.log(energyLoad)
 
         // Energy gained (solar)
         var energySolar = 24 * dayFraction * panel.value.power * (panel.value.derating / 100) * (battery.value.efficiency / 100)
